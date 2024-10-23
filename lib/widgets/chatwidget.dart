@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:social/utils/globaltheme.dart';
 
 class Message {
   final String senderId;
@@ -29,11 +30,35 @@ class _ChatWidgetState extends State<ChatWidget> {
   final User? user = FirebaseAuth.instance.currentUser;
   final TextEditingController _messageController = TextEditingController();
   final List<Message> _messages = [];
+  Map<String, dynamic>? userData;
 
   @override
   void initState() {
     super.initState();
     fetchMessages();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    if (user != null) {
+      try {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user!.uid)
+            .get();
+
+        if (userDoc.exists) {
+          setState(() {
+            userData = userDoc.data() as Map<String, dynamic>;
+            userData!['id'] = userDoc.id;
+          });
+        } else {
+          debugPrint('No such user data in Firestore');
+        }
+      } catch (e) {
+        debugPrint('Error fetching user data: $e');
+      }
+    }
   }
 
   Future<void> fetchchatsavailable() async {}
@@ -126,7 +151,6 @@ class _ChatWidgetState extends State<ChatWidget> {
       ),
       body: Column(
         children: [
-          // Messages List
           Expanded(
             child: ListView.builder(
               itemCount: _messages.length,
@@ -168,32 +192,44 @@ class _ChatWidgetState extends State<ChatWidget> {
               },
             ),
           ),
-          // Input Field and Send Button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            child: Row(
-              children: [
-                // Text Input Field
-                Expanded(
-                  child: TextFormField(
-                    controller: _messageController,
-                    decoration: InputDecoration(
-                      hintText: 'Type a message...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
+          userData != null
+              ? userData!['ismute'] == 0
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0, vertical: 4.0),
+                      child: Row(
+                        children: [
+                          // Text Input Field
+                          Expanded(
+                            child: TextFormField(
+                              controller: _messageController,
+                              decoration: InputDecoration(
+                                hintText: 'Type a message...',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.send, color: Colors.blue),
+                            onPressed: _sendMessage,
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Send Button
-                IconButton(
-                  icon: const Icon(Icons.send, color: Colors.blue),
-                  onPressed: _sendMessage,
-                ),
-              ],
-            ),
-          ),
+                    )
+                  : Container(
+                      width: MediaQuery.of(context).size.width,
+                      height: 40,
+                      color: secondColor,
+                      child: const Center(
+                          child: Text(
+                        "You're currently muted",
+                        style: TextStyle(color: Colors.white),
+                      )),
+                    )
+              : Container(),
         ],
       ),
     );

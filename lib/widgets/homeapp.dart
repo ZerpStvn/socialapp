@@ -51,6 +51,7 @@ class HomeAppBar extends StatelessWidget {
                   MaterialPageRoute(
                       builder: (context) => CreateUserPost(
                             userID: "${userData!['id']}",
+                            ismute: userData!['ismute'],
                           )));
             },
             child: const Icon(Icons.add),

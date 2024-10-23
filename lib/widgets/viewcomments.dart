@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:social/controller/searchuser.dart';
 import 'package:social/utils/globaltheme.dart';
+import 'package:social/utils/logs.dart';
 import 'package:social/widgets/homeapp.dart';
 
 class ViewCommentSection extends StatefulWidget {
@@ -18,8 +19,10 @@ class ViewCommentSection extends StatefulWidget {
 class _ViewCommentSectionState extends State<ViewCommentSection> {
   Set<String> likedComments = {};
   Map<String, int> commentLikeCounts = {};
+  final User? user = FirebaseAuth.instance.currentUser;
   final TextEditingController usercomment = TextEditingController();
   final String currentUserID = FirebaseAuth.instance.currentUser!.uid;
+  Map<String, dynamic>? userData;
   Future<void> _fetchLikedComments(String postID) async {
     try {
       QuerySnapshot likedCommentSnapshot = await FirebaseFirestore.instance
@@ -69,9 +72,9 @@ class _ViewCommentSectionState extends State<ViewCommentSection> {
         .doc(postId)
         .collection('comments')
         .add({
-      'username': widget.userData!['name'],
-      'userprofile': widget.userData!['profileImage'],
-      'userid': widget.userData!['userid'],
+      'username': userData!['name'],
+      'userprofile': userData!['profileImage'],
+      'userid': userData!['userid'],
       'postid': postId,
       'comment': usercomment.text,
       'created': Timestamp.now(),
@@ -79,6 +82,7 @@ class _ViewCommentSectionState extends State<ViewCommentSection> {
     setState(() {
       usercomment.clear();
     });
+    recordlogs(postId, "User comment to a post");
   }
 
   Future<void> addlikecomment(String commentID, String postID) async {
@@ -109,6 +113,28 @@ class _ViewCommentSectionState extends State<ViewCommentSection> {
     setState(() {});
   }
 
+  Future<void> _fetchUserData() async {
+    if (user != null) {
+      try {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user!.uid)
+            .get();
+
+        if (userDoc.exists) {
+          setState(() {
+            userData = userDoc.data() as Map<String, dynamic>;
+            userData!['id'] = userDoc.id;
+          });
+        } else {
+          debugPrint('No such user data in Firestore');
+        }
+      } catch (e) {
+        debugPrint('Error fetching user data: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,7 +146,7 @@ class _ViewCommentSectionState extends State<ViewCommentSection> {
               color: Colors.black, fontWeight: FontWeight.bold, fontSize: 35),
         ),
         actions: [
-          HomeAppBar(userData: widget.userData),
+          HomeAppBar(userData: userData),
           IconButton(
               onPressed: () {
                 Navigator.push(
@@ -222,29 +248,36 @@ class _ViewCommentSectionState extends State<ViewCommentSection> {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: TextFormField(
-                    controller: usercomment,
-                    decoration: InputDecoration(
-                      labelText: 'Write a comment...',
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          Icons.send,
-                          color: usercomment.text.isNotEmpty
-                              ? secondColor
-                              : Colors.grey,
-                        ),
-                        onPressed: () {
-                          if (usercomment.text.isNotEmpty) {
-                            submitcomment(widget.postID);
-                          }
-                        },
+                userData != null
+                    ? userData!['ismute'] != 1
+                        ? Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: TextFormField(
+                              controller: usercomment,
+                              decoration: InputDecoration(
+                                labelText: 'Write a comment...',
+                                border: const OutlineInputBorder(),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    Icons.send,
+                                    color: usercomment.text.isNotEmpty
+                                        ? secondColor
+                                        : Colors.grey,
+                                  ),
+                                  onPressed: () {
+                                    if (usercomment.text.isNotEmpty) {
+                                      submitcomment(widget.postID);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container()
+                    : const Center(
+                        child: CircularProgressIndicator(),
                       ),
-                    ),
-                  ),
-                ),
                 const SizedBox(height: 16.0),
               ],
             ),
@@ -258,6 +291,7 @@ class _ViewCommentSectionState extends State<ViewCommentSection> {
   void initState() {
     super.initState();
     _fetchLikedComments(widget.postID);
+    _fetchUserData();
   }
 
   @override

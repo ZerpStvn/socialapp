@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:social/controller/loginForm.dart';
 import 'package:social/utils/globaltheme.dart';
+import 'package:social/utils/logs.dart';
 import 'package:social/views/chat.dart';
 import 'package:social/views/following.dart';
 import 'package:social/views/notif.dart';
@@ -113,10 +114,12 @@ class _DrawerFb1State extends State<DrawerFb1> {
             ),
             const SizedBox(height: 5),
             MenuItem(
-              text: 'Messages',
-              icon: Icons.workspaces_outline,
-              onClicked: () => selectedItem(context, 2),
-            ),
+                text: 'Messages',
+                icon: Icons.workspaces_outline,
+                onClicked: () {
+                  selectedItem(context, 2);
+                  recordlogs('', "User open a message");
+                }),
             const SizedBox(height: 5),
             const SizedBox(height: 8),
             const Divider(color: Colors.white70),

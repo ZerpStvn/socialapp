@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:social/controller/forgotpassword.dart';
 import 'package:social/controller/signupForm.dart';
 import 'package:social/utils/globaltheme.dart';
+import 'package:social/utils/logs.dart';
 import 'package:social/views/homepage.dart';
 
 class LoginForm extends StatefulWidget {
@@ -174,6 +175,7 @@ class _LoginFormState extends State<LoginForm> {
                                   if (_formKey.currentState!.validate()) {
                                     _submitform();
                                   }
+                                  recordlogs('', "User login");
                                 },
                                 title: "Login"),
                           ),

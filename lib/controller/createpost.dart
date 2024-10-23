@@ -4,11 +4,13 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:social/utils/globaltheme.dart';
+import 'package:social/utils/logs.dart';
 import 'package:video_player/video_player.dart';
 
 class CreateUserPost extends StatefulWidget {
   final String userID;
-  const CreateUserPost({super.key, required this.userID});
+  final int ismute;
+  const CreateUserPost({super.key, required this.userID, required this.ismute});
 
   @override
   State<CreateUserPost> createState() => _CreateUserPostState();
@@ -54,9 +56,9 @@ class _CreateUserPostState extends State<CreateUserPost> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text("Uploading..."),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   CircularProgressIndicator(value: _uploadProgress),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text("${(_uploadProgress * 100).toStringAsFixed(2)} %"),
                 ],
               ),
@@ -64,20 +66,16 @@ class _CreateUserPostState extends State<CreateUserPost> {
           },
         );
 
-        // Listen to the upload progress
         uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
           setState(() {
             _uploadProgress = snapshot.bytesTransferred / snapshot.totalBytes;
           });
         });
 
-        // Wait for the upload to complete
         TaskSnapshot storageSnapshot = await uploadTask.whenComplete(() {});
 
-        // Get the media download URL
         mediaUrl = await storageSnapshot.ref.getDownloadURL();
 
-        // Close the dialog once the upload is done
         Navigator.pop(context);
       }
 
@@ -93,6 +91,8 @@ class _CreateUserPostState extends State<CreateUserPost> {
         'type': type,
         'createdAt': FieldValue.serverTimestamp(),
       });
+
+      await recordlogs("", "Created a post");
 
       setState(() {
         _postdes.clear();
@@ -174,108 +174,111 @@ class _CreateUserPostState extends State<CreateUserPost> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: secondColor,
-        automaticallyImplyLeading: true,
-        title: const PrimaryText(
-          data: "Create Post",
-          fcolor: Colors.white,
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            GestureDetector(
-              onTap: _pickMedia,
-              child: Container(
-                width: MediaQuery.of(context).size.width,
-                height: 240,
-                decoration: mediaFile != null
-                    ? BoxDecoration(
-                        color: secondColor,
-                        image: isVideo
-                            ? null
-                            : DecorationImage(
-                                fit: BoxFit.cover,
-                                image: FileImage(File(mediaFile!.path)),
-                              ),
-                      )
-                    : const BoxDecoration(color: secondColor),
-                child: Center(
-                  child: mediaFile == null
-                      ? const PrimaryText(
-                          data: "Add Media",
-                          fcolor: Colors.white,
-                        )
-                      : isVideo &&
-                              _videoController != null &&
-                              _videoController!.value.isInitialized
-                          ? AspectRatio(
-                              aspectRatio: _videoController!.value.aspectRatio,
-                              child: VideoPlayer(_videoController!),
-                            )
-                          : Container(),
-                ),
+    return widget.ismute == 0
+        ? Scaffold(
+            appBar: AppBar(
+              iconTheme: const IconThemeData(color: Colors.white),
+              backgroundColor: secondColor,
+              automaticallyImplyLeading: true,
+              title: const PrimaryText(
+                data: "Create Post",
+                fcolor: Colors.white,
               ),
             ),
-            if (isVideo && _videoController != null)
-              VideoProgressIndicator(
-                _videoController!,
-                allowScrubbing: true,
-              ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextFormField(
-                  maxLines: 20,
-                  minLines: 13,
-                  textAlign: TextAlign.start,
-                  controller: _postdes,
-                  decoration: const InputDecoration(
-                    alignLabelWithHint: true,
-                    hintText: 'What\'s on your mind?',
-                    labelStyle: TextStyle(color: Colors.black),
-                    border: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                  )),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
+            body: SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  isload != true
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            GlobalButton(
-                                callback: () {
-                                  creatpost("post");
-                                },
-                                title: "Post"),
-                            const SizedBox(
-                              width: 10,
-                            ),
-                            isVideo == false
-                                ? GlobalButton(
-                                    callback: () {
-                                      creatpost("story");
-                                    },
-                                    title: "Story")
-                                : Container()
-                          ],
-                        )
-                      : const CircularProgressIndicator()
+                  GestureDetector(
+                    onTap: _pickMedia,
+                    child: Container(
+                      width: MediaQuery.of(context).size.width,
+                      height: 240,
+                      decoration: mediaFile != null
+                          ? BoxDecoration(
+                              color: secondColor,
+                              image: isVideo
+                                  ? null
+                                  : DecorationImage(
+                                      fit: BoxFit.cover,
+                                      image: FileImage(File(mediaFile!.path)),
+                                    ),
+                            )
+                          : const BoxDecoration(color: secondColor),
+                      child: Center(
+                        child: mediaFile == null
+                            ? const PrimaryText(
+                                data: "Add Media",
+                                fcolor: Colors.white,
+                              )
+                            : isVideo &&
+                                    _videoController != null &&
+                                    _videoController!.value.isInitialized
+                                ? AspectRatio(
+                                    aspectRatio:
+                                        _videoController!.value.aspectRatio,
+                                    child: VideoPlayer(_videoController!),
+                                  )
+                                : Container(),
+                      ),
+                    ),
+                  ),
+                  if (isVideo && _videoController != null)
+                    VideoProgressIndicator(
+                      _videoController!,
+                      allowScrubbing: true,
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextFormField(
+                        maxLines: 20,
+                        minLines: 13,
+                        textAlign: TextAlign.start,
+                        controller: _postdes,
+                        decoration: const InputDecoration(
+                          alignLabelWithHint: true,
+                          hintText: 'What\'s on your mind?',
+                          labelStyle: TextStyle(color: Colors.black),
+                          border: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                        )),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        isload != true
+                            ? Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  GlobalButton(
+                                      callback: () {
+                                        creatpost("post");
+                                      },
+                                      title: "Post"),
+                                  const SizedBox(
+                                    width: 10,
+                                  ),
+                                  isVideo == false
+                                      ? GlobalButton(
+                                          callback: () {
+                                            creatpost("story");
+                                          },
+                                          title: "Story")
+                                      : Container()
+                                ],
+                              )
+                            : const CircularProgressIndicator()
+                      ],
+                    ),
+                  )
                 ],
               ),
-            )
-          ],
-        ),
-      ),
-    );
+            ),
+          )
+        : const MutedPost();
   }
 
   @override

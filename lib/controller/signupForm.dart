@@ -273,7 +273,7 @@ class _SignUpFormState extends State<SignUpForm> {
   }
 
   Future<void> _dailysignup(String imageUrl, String uid) async {
-    FirebaseFirestore.instance.collection('users').add({
+    FirebaseFirestore.instance.collection('dailysignup').add({
       'name': _nameController.text,
       'email': _emailController.text,
       'schoolId': _schoolIdController.text,
@@ -313,11 +313,11 @@ class _SignUpFormState extends State<SignUpForm> {
             'email': _emailController.text,
             'schoolId': _schoolIdController.text,
             'isvalid': 1,
+            'ismute': 0,
             'isonline': 0,
             'profileImage': imageUrl,
             'userid': user.uid,
           }).then((uid) {
-            // Inform the user to check their email for verification
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
