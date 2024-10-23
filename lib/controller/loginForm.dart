@@ -232,14 +232,12 @@ class _LoginFormState extends State<LoginForm> {
       User? user = FirebaseAuth.instance.currentUser;
 
       if (user != null) {
-        // Check if the user is banned by looking at the "isvalid" field in Firestore
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
             .get();
 
         if (userDoc.exists && userDoc['isvalid'] == 2) {
-          // If "isvalid" is 2, show a modal saying the user is banned
           setState(() {
             isload = false;
           });

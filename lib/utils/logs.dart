@@ -61,3 +61,27 @@ class MutedPost extends StatelessWidget {
     );
   }
 }
+
+class LoadingPost extends StatelessWidget {
+  const LoadingPost({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: secondColor,
+        automaticallyImplyLeading: true,
+        title: const PrimaryText(
+          data: "Create Post",
+          fcolor: Colors.white,
+        ),
+      ),
+      body: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [Center(child: CircularProgressIndicator())],
+      ),
+    );
+  }
+}

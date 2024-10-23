@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -23,7 +24,9 @@ class _CreateUserPostState extends State<CreateUserPost> {
   bool isload = false;
   final ImagePicker _imagePicker = ImagePicker();
   final TextEditingController _postdes = TextEditingController();
-  double _uploadProgress = 0; // To store upload progress percentage
+  double _uploadProgress = 0;
+  final User? user = FirebaseAuth.instance.currentUser;
+  Map<String, dynamic>? userData;
 
   Future<void> creatpost(String type) async {
     setState(() {
@@ -173,112 +176,142 @@ class _CreateUserPostState extends State<CreateUserPost> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+    debugPrint("logs ${userData}");
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userID)
+          .get();
+
+      if (userDoc.exists) {
+        setState(() {
+          userData = userDoc.data() as Map<String, dynamic>;
+          userData!['id'] = userDoc.id;
+        });
+      } else {
+        debugPrint('No such user data in Firestore');
+      }
+    } catch (e) {
+      debugPrint('Error fetching user data: $e');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return widget.ismute == 0
-        ? Scaffold(
-            appBar: AppBar(
-              iconTheme: const IconThemeData(color: Colors.white),
-              backgroundColor: secondColor,
-              automaticallyImplyLeading: true,
-              title: const PrimaryText(
-                data: "Create Post",
-                fcolor: Colors.white,
-              ),
-            ),
-            body: SingleChildScrollView(
-              child: Column(
-                children: [
-                  GestureDetector(
-                    onTap: _pickMedia,
-                    child: Container(
-                      width: MediaQuery.of(context).size.width,
-                      height: 240,
-                      decoration: mediaFile != null
-                          ? BoxDecoration(
-                              color: secondColor,
-                              image: isVideo
-                                  ? null
-                                  : DecorationImage(
-                                      fit: BoxFit.cover,
-                                      image: FileImage(File(mediaFile!.path)),
-                                    ),
-                            )
-                          : const BoxDecoration(color: secondColor),
-                      child: Center(
-                        child: mediaFile == null
-                            ? const PrimaryText(
-                                data: "Add Media",
-                                fcolor: Colors.white,
-                              )
-                            : isVideo &&
-                                    _videoController != null &&
-                                    _videoController!.value.isInitialized
-                                ? AspectRatio(
-                                    aspectRatio:
-                                        _videoController!.value.aspectRatio,
-                                    child: VideoPlayer(_videoController!),
+    return userData != null
+        ? userData!['ismute'] == 0
+            ? Scaffold(
+                appBar: AppBar(
+                  iconTheme: const IconThemeData(color: Colors.white),
+                  backgroundColor: secondColor,
+                  automaticallyImplyLeading: true,
+                  title: const PrimaryText(
+                    data: "Create Post",
+                    fcolor: Colors.white,
+                  ),
+                ),
+                body: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      GestureDetector(
+                        onTap: _pickMedia,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          height: 240,
+                          decoration: mediaFile != null
+                              ? BoxDecoration(
+                                  color: secondColor,
+                                  image: isVideo
+                                      ? null
+                                      : DecorationImage(
+                                          fit: BoxFit.cover,
+                                          image:
+                                              FileImage(File(mediaFile!.path)),
+                                        ),
+                                )
+                              : const BoxDecoration(color: secondColor),
+                          child: Center(
+                            child: mediaFile == null
+                                ? const PrimaryText(
+                                    data: "Add Media",
+                                    fcolor: Colors.white,
                                   )
-                                : Container(),
+                                : isVideo &&
+                                        _videoController != null &&
+                                        _videoController!.value.isInitialized
+                                    ? AspectRatio(
+                                        aspectRatio:
+                                            _videoController!.value.aspectRatio,
+                                        child: VideoPlayer(_videoController!),
+                                      )
+                                    : Container(),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  if (isVideo && _videoController != null)
-                    VideoProgressIndicator(
-                      _videoController!,
-                      allowScrubbing: true,
-                    ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TextFormField(
-                        maxLines: 20,
-                        minLines: 13,
-                        textAlign: TextAlign.start,
-                        controller: _postdes,
-                        decoration: const InputDecoration(
-                          alignLabelWithHint: true,
-                          hintText: 'What\'s on your mind?',
-                          labelStyle: TextStyle(color: Colors.black),
-                          border: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                        )),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        isload != true
-                            ? Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  GlobalButton(
-                                      callback: () {
-                                        creatpost("post");
-                                      },
-                                      title: "Post"),
-                                  const SizedBox(
-                                    width: 10,
-                                  ),
-                                  isVideo == false
-                                      ? GlobalButton(
+                      if (isVideo && _videoController != null)
+                        VideoProgressIndicator(
+                          _videoController!,
+                          allowScrubbing: true,
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                            maxLines: 20,
+                            minLines: 13,
+                            textAlign: TextAlign.start,
+                            controller: _postdes,
+                            decoration: const InputDecoration(
+                              alignLabelWithHint: true,
+                              hintText: 'What\'s on your mind?',
+                              labelStyle: TextStyle(color: Colors.black),
+                              border: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                            )),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            isload != true
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      GlobalButton(
                                           callback: () {
-                                            creatpost("story");
+                                            creatpost("post");
                                           },
-                                          title: "Story")
-                                      : Container()
-                                ],
-                              )
-                            : const CircularProgressIndicator()
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
-          )
-        : const MutedPost();
+                                          title: "Post"),
+                                      const SizedBox(
+                                        width: 10,
+                                      ),
+                                      isVideo == false
+                                          ? GlobalButton(
+                                              callback: () {
+                                                creatpost("story");
+                                              },
+                                              title: "Story")
+                                          : Container()
+                                    ],
+                                  )
+                                : const CircularProgressIndicator()
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              )
+            : const MutedPost()
+        : const LoadingPost();
   }
 
   @override
