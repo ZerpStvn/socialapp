@@ -75,7 +75,8 @@ class _LoginFormState extends State<LoginForm> {
                                 SizedBox(
                                     width: 83,
                                     height: 83,
-                                    child: Image.asset('assets/logo.png')),
+                                    child: Image.asset(
+                                        'assets/launcher/ic_launcher.png')),
                                 const SizedBox(
                                   width: 10,
                                 ),

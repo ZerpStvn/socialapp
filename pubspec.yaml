@@ -46,10 +46,20 @@ dependencies:
   video_player: ^2.9.2
   http: ^1.2.2
   shared_preferences: ^2.3.2
+  flutter_launcher_icons: ^0.14.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+flutter_launcher_icons:
+  anroid: "launcher_icon"
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/launcher/ic_launcher.png"
+  adaptive_icon_background: "assets/launcher/ic_launcher_background.png"
+  adaptive_icon_foreground: "assets/launcher/ic_launcher_foreground.png"
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -72,6 +82,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/
+    - assets/launcher/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

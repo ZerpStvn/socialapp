@@ -42,6 +42,13 @@ class _ForyouPageState extends State<ForyouPage> {
 
       allUserPosts.addAll(postSnapshot.docs);
 
+      // Manually sort posts by createdAt timestamp in descending order
+      allUserPosts.sort((a, b) {
+        Timestamp timestampA = a['createdAt'] ?? Timestamp(0, 0);
+        Timestamp timestampB = b['createdAt'] ?? Timestamp(0, 0);
+        return timestampB.compareTo(timestampA);
+      });
+
       yield allUserPosts;
     } catch (e) {
       yield [];

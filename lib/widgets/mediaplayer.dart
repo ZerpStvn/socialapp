@@ -18,6 +18,7 @@ class _MediaPostState extends State<MediaPost> {
   VideoPlayerController? _videoController;
   bool _isVideo = false;
   bool _isLoading = true;
+  bool _isPlaying = false; // Track if video is playing
 
   @override
   void initState() {
@@ -45,8 +46,21 @@ class _MediaPostState extends State<MediaPost> {
           _isLoading = false;
         });
         _videoController!.setLooping(true);
-        _videoController!.play();
       });
+  }
+
+  void _playPauseVideo() {
+    if (_videoController != null && _videoController!.value.isInitialized) {
+      setState(() {
+        if (_videoController!.value.isPlaying) {
+          _videoController!.pause();
+          _isPlaying = false;
+        } else {
+          _videoController!.play();
+          _isPlaying = true;
+        }
+      });
+    }
   }
 
   @override
@@ -68,6 +82,11 @@ class _MediaPostState extends State<MediaPost> {
     return GestureDetector(
       onTap: () {
         if (_isVideo) {
+          _playPauseVideo();
+        }
+      },
+      onDoubleTap: () {
+        if (_isVideo) {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -76,21 +95,49 @@ class _MediaPostState extends State<MediaPost> {
           );
         }
       },
-      child: Container(
-        width: MediaQuery.of(context).size.width,
-        height: 240,
-        decoration: const BoxDecoration(color: secondColor),
-        child: _isVideo
-            ? _videoController != null && _videoController!.value.isInitialized
-                ? AspectRatio(
-                    aspectRatio: _videoController!.value.aspectRatio,
-                    child: VideoPlayer(_videoController!),
-                  )
-                : const Center(child: CircularProgressIndicator())
-            : Image.network(
-                widget.mediaUrl,
-                fit: BoxFit.cover,
+      child: Stack(
+        children: [
+          Container(
+            width: MediaQuery.of(context).size.width,
+            height: 240,
+            decoration: const BoxDecoration(color: secondColor),
+            child: _isVideo
+                ? _videoController != null &&
+                        _videoController!.value.isInitialized
+                    ? AspectRatio(
+                        aspectRatio: _videoController!.value.aspectRatio,
+                        child: VideoPlayer(_videoController!),
+                      )
+                    : const Center(child: CircularProgressIndicator())
+                : Image.network(
+                    widget.mediaUrl,
+                    fit: BoxFit.cover,
+                  ),
+          ),
+          Positioned(
+            top: 90,
+            bottom: 90,
+            left: 0,
+            right: 0,
+            child: AnimatedOpacity(
+              opacity: _isPlaying ? 0.0 : 1.0, // Fade out when playing
+              duration: const Duration(milliseconds: 300),
+              child: Container(
+                height: 9,
+                width: 9,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: secondColor,
+                ),
+                child: Icon(
+                  _isPlaying ? Icons.play_arrow_outlined : Icons.pause_outlined,
+                  size: 30,
+                  color: Colors.white,
+                ),
               ),
+            ),
+          ),
+        ],
       ),
     );
   }

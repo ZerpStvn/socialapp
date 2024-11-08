@@ -62,6 +62,14 @@ class _UsersPostFeedState extends State<UsersPostFeed> {
         followedUserData
             .add(followedUserDataDoc.data() as Map<String, dynamic>);
       }
+
+      // Manually sort posts by createdAt timestamp in descending order
+      allUserPosts.sort((a, b) {
+        Timestamp timestampA = a['createdAt'] ?? Timestamp(0, 0);
+        Timestamp timestampB = b['createdAt'] ?? Timestamp(0, 0);
+        return timestampB.compareTo(timestampA);
+      });
+
       return allUserPosts;
     });
   }

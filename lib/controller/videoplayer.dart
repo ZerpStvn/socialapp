@@ -51,54 +51,56 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         titleTextStyle: const TextStyle(color: Colors.white),
         title: const Text('Video Player'),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AspectRatio(
-            aspectRatio: _videoController!.value.aspectRatio,
-            child: VideoPlayer(_videoController!),
-          ),
-          VideoProgressIndicator(_videoController!, allowScrubbing: true),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.replay_10),
-                onPressed: () {
-                  final currentPosition = _videoController!.value.position;
-                  _videoController!.seekTo(
-                    currentPosition - const Duration(seconds: 10),
-                  );
-                },
-              ),
-              IconButton(
-                icon: Icon(
-                  _videoController!.value.isPlaying
-                      ? Icons.pause
-                      : Icons.play_arrow,
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AspectRatio(
+              aspectRatio: _videoController!.value.aspectRatio,
+              child: VideoPlayer(_videoController!),
+            ),
+            VideoProgressIndicator(_videoController!, allowScrubbing: true),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.replay_10),
+                  onPressed: () {
+                    final currentPosition = _videoController!.value.position;
+                    _videoController!.seekTo(
+                      currentPosition - const Duration(seconds: 10),
+                    );
+                  },
                 ),
-                onPressed: () {
-                  setState(() {
-                    if (_videoController!.value.isPlaying) {
-                      _videoController!.pause();
-                    } else {
-                      _videoController!.play();
-                    }
-                  });
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.forward_10),
-                onPressed: () {
-                  final currentPosition = _videoController!.value.position;
-                  _videoController!.seekTo(
-                    currentPosition + const Duration(seconds: 10),
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
+                IconButton(
+                  icon: Icon(
+                    _videoController!.value.isPlaying
+                        ? Icons.pause
+                        : Icons.play_arrow,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      if (_videoController!.value.isPlaying) {
+                        _videoController!.pause();
+                      } else {
+                        _videoController!.play();
+                      }
+                    });
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.forward_10),
+                  onPressed: () {
+                    final currentPosition = _videoController!.value.position;
+                    _videoController!.seekTo(
+                      currentPosition + const Duration(seconds: 10),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

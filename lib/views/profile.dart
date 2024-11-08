@@ -22,6 +22,9 @@ class _UserProfileState extends State<UserProfile> {
   int followingCount = 0;
   int numberofpost = 0;
 
+  // Create a ScrollController to manage the scrolling
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -32,7 +35,12 @@ class _UserProfileState extends State<UserProfile> {
     _getnumberofPost();
   }
 
-  // Fetch the profile user's data from Firestore
+  @override
+  void dispose() {
+    _scrollController.dispose(); // Dispose the ScrollController
+    super.dispose();
+  }
+
   Future<void> _fetchUserData() async {
     try {
       DocumentSnapshot snapshot = await FirebaseFirestore.instance
@@ -136,7 +144,6 @@ class _UserProfileState extends State<UserProfile> {
     }
   }
 
-  // Function to get the count of followers
   Future<void> _getFollowerCount() async {
     try {
       QuerySnapshot followerSnapshot = await FirebaseFirestore.instance
@@ -175,9 +182,22 @@ class _UserProfileState extends State<UserProfile> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('User Profile'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.arrow_upward),
+            onPressed: () {
+              _scrollController.animateTo(
+                0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+          ),
+        ],
       ),
       body: userData != null
           ? SingleChildScrollView(
+              controller: _scrollController, // Attach ScrollController here
               child: Padding(
                 padding: const EdgeInsets.all(0.0),
                 child: Column(
@@ -201,9 +221,7 @@ class _UserProfileState extends State<UserProfile> {
                               ),
                             ],
                           ),
-                          const SizedBox(
-                            width: 20,
-                          ),
+                          const SizedBox(width: 20),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
@@ -289,10 +307,6 @@ class _UserProfileState extends State<UserProfile> {
                         child: TabBarWidget(
                           ownuserpostid: widget.userID,
                         ))
-                    // SizedBox(
-                    //     width: MediaQuery.of(context).size.width,
-                    //     height: MediaQuery.of(context).size.height * 0.60,
-                    //     child: const TabBarAndTabViews())
                   ],
                 ),
               ),

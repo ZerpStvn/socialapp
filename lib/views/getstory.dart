@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:social/utils/globaltheme.dart';
 import 'package:social/views/photoview.dart';
+import 'package:social/views/storyview.dart';
 
 class GetFollowingStory extends StatefulWidget {
   const GetFollowingStory({super.key});
@@ -17,6 +18,10 @@ class _GetFollowingStoryState extends State<GetFollowingStory> {
 
   Future<void> _displayFollowing() async {
     try {
+      // Calculate the timestamp for 24 hours ago
+      DateTime now = DateTime.now();
+      DateTime cutoffTime = now.subtract(const Duration(hours: 24));
+
       QuerySnapshot followingDocs = await FirebaseFirestore.instance
           .collection('follows')
           .doc(user!.uid)
@@ -33,17 +38,18 @@ class _GetFollowingStoryState extends State<GetFollowingStory> {
             .where('type', isEqualTo: 'story')
             .get();
 
-        if (userPostsDoc.docs.isNotEmpty) {
-          for (var postDoc in userPostsDoc.docs) {
-            Map<String, dynamic>? postData =
-                postDoc.data() as Map<String, dynamic>?;
-            if (postData != null) {
-              postData['userID'] = userID;
+        for (var postDoc in userPostsDoc.docs) {
+          Map<String, dynamic>? postData =
+              postDoc.data() as Map<String, dynamic>?;
+          if (postData != null) {
+            // Filter by posts created within the last 24 hours
+            Timestamp createdAt = postData['createdAt'] ?? Timestamp(0, 0);
+            if (createdAt.toDate().isAfter(cutoffTime)) {
+              postData['userID'] = userID; // Add user ID
+              postData['postID'] = postDoc.id; // Add document ID as postID
               getFollowingStories.add(postData);
             }
           }
-        } else {
-          debugPrint("No posts found for user $userID");
         }
       }
 
@@ -80,8 +86,10 @@ class _GetFollowingStoryState extends State<GetFollowingStory> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                MyImageView(imageUrl: story['imageUrl']),
+                            builder: (context) => StoryView(
+                              imageUrl: story['imageUrl'],
+                              postID: story['postID'],
+                            ),
                           ),
                         );
                       },

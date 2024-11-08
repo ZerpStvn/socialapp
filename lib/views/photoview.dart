@@ -4,7 +4,10 @@ import 'package:photo_view/photo_view.dart';
 class MyImageView extends StatelessWidget {
   final String imageUrl;
 
-  const MyImageView({super.key, required this.imageUrl});
+  const MyImageView({
+    super.key,
+    required this.imageUrl,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -32,6 +32,7 @@ class _CreateUserPostState extends State<CreateUserPost> {
     setState(() {
       isload = true;
     });
+
     if (_postdes.text.isEmpty && mediaFile == null) {
       scaffoldmessenger('Post needs either a description or an image/video');
       setState(() {
@@ -54,21 +55,26 @@ class _CreateUserPostState extends State<CreateUserPost> {
           context: context,
           barrierDismissible: false,
           builder: (BuildContext context) {
-            return AlertDialog(
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text("Uploading..."),
-                  const SizedBox(height: 20),
-                  CircularProgressIndicator(value: _uploadProgress),
-                  const SizedBox(height: 10),
-                  Text("${(_uploadProgress * 100).toStringAsFixed(2)} %"),
-                ],
-              ),
+            return StatefulBuilder(
+              builder: (context, setState) {
+                return AlertDialog(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text("Uploading..."),
+                      const SizedBox(height: 20),
+                      CircularProgressIndicator(value: _uploadProgress),
+                      const SizedBox(height: 10),
+                      Text("${(_uploadProgress * 100).toStringAsFixed(2)} %"),
+                    ],
+                  ),
+                );
+              },
             );
           },
         );
 
+        // Listen to upload task events and update the progress
         uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
           setState(() {
             _uploadProgress = snapshot.bytesTransferred / snapshot.totalBytes;
@@ -79,7 +85,8 @@ class _CreateUserPostState extends State<CreateUserPost> {
 
         mediaUrl = await storageSnapshot.ref.getDownloadURL();
 
-        Navigator.pop(context);
+        // Close the upload dialog
+        if (context.mounted) Navigator.pop(context);
       }
 
       await FirebaseFirestore.instance
@@ -111,8 +118,7 @@ class _CreateUserPostState extends State<CreateUserPost> {
       setState(() {
         isload = false;
       });
-      // Close the dialog if there is an error
-      Navigator.pop(context);
+      if (context.mounted) Navigator.pop(context);
     }
   }
 
