@@ -161,219 +161,260 @@ class _ForyouPageState extends State<ForyouPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          StreamBuilder<List<DocumentSnapshot>>(
-            stream: _fetchFollowedUsersPosts(),
+    return Column(
+      children: [
+        StreamBuilder(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc(currentUserID)
+                .snapshots(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
-                return const Center(child: LinearProgressIndicator());
+                return Container();
+              } else {
+                var ismutedcheck = snapshot.data!.data();
+                if (ismutedcheck!['ismute'] != 0) {
+                  return Container(
+                    color: Colors.red,
+                    width: MediaQuery.of(context).size.width,
+                    height: 50,
+                    child: Center(
+                      child: Text(
+                        "You have been muted",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  );
+                } else {
+                  return Container();
+                }
               }
+            }),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                StreamBuilder<List<DocumentSnapshot>>(
+                  stream: _fetchFollowedUsersPosts(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Center(child: LinearProgressIndicator());
+                    }
 
-              userPosts = snapshot.data!;
+                    userPosts = snapshot.data!;
 
-              return ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: userPosts.length,
-                itemBuilder: (context, index) {
-                  var postData =
-                      userPosts[index].data() as Map<String, dynamic>;
-                  var postID = userPosts[index].id;
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: userPosts.length,
+                      itemBuilder: (context, index) {
+                        var postData =
+                            userPosts[index].data() as Map<String, dynamic>;
+                        var postID = userPosts[index].id;
 
-                  if (postData['type'] != 'story') {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(18.0),
-                          child: FutureBuilder(
-                              future: FirebaseFirestore.instance
-                                  .collection('users')
-                                  .doc(postData['userID'])
-                                  .get(),
-                              builder: (context, snapshot) {
-                                if (!snapshot.hasData) {
-                                  return Container();
-                                } else {
-                                  var userData = snapshot.data!.data();
-                                  return Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          GestureDetector(
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      UserProfile(
-                                                          userID: postData[
-                                                              'userID']),
+                        if (postData['type'] != 'story') {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(18.0),
+                                child: FutureBuilder(
+                                    future: FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(postData['userID'])
+                                        .get(),
+                                    builder: (context, snapshot) {
+                                      if (!snapshot.hasData) {
+                                        return Container();
+                                      } else {
+                                        var userData = snapshot.data!.data();
+                                        return Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            UserProfile(
+                                                                userID: postData[
+                                                                    'userID']),
+                                                      ),
+                                                    );
+                                                  },
+                                                  child: CircleAvatar(
+                                                    foregroundImage: NetworkImage(
+                                                        '${userData!['profileImage']}'),
+                                                  ),
                                                 ),
-                                              );
-                                            },
-                                            child: CircleAvatar(
-                                              foregroundImage: NetworkImage(
-                                                  '${userData!['profileImage']}'),
+                                                const SizedBox(width: 10),
+                                                Text("${userData['name']}"),
+                                              ],
                                             ),
+                                            FutureBuilder<bool>(
+                                              future: _isFollowingUser(
+                                                  postData['userID']),
+                                              builder:
+                                                  (context, followSnapshot) {
+                                                if (!followSnapshot.hasData) {
+                                                  return const CircularProgressIndicator(); // Show loading while checking
+                                                }
+
+                                                bool isFollowing =
+                                                    followSnapshot.data!;
+
+                                                return TextButton(
+                                                  onPressed: () {
+                                                    if (isFollowing) {
+                                                      unfollow(
+                                                          postData['userID']);
+                                                    } else {
+                                                      following(
+                                                          postData['userID']);
+                                                    }
+                                                  },
+                                                  child: postData['userID'] !=
+                                                          currentUserID
+                                                      ? isFollowing == false
+                                                          ? Text(
+                                                              postData['userID'] !=
+                                                                      currentUserID
+                                                                  ? isFollowing
+                                                                      ? "Following"
+                                                                      : "Follow"
+                                                                  : "",
+                                                              style: TextStyle(
+                                                                color: isFollowing
+                                                                    ? Colors
+                                                                        .grey
+                                                                    : Colors
+                                                                        .blue,
+                                                              ),
+                                                            )
+                                                          : morevertOption(
+                                                              postData[
+                                                                  'userID'],
+                                                              context,
+                                                              postData,
+                                                              postID)
+                                                      : Container(),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      }
+                                    }),
+                              ),
+                              postData['mediaType'] == 'video'
+                                  ? MediaPost(mediaUrl: postData['imageUrl'])
+                                  : GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => MyImageView(
+                                                imageUrl: postData['imageUrl']),
                                           ),
-                                          const SizedBox(width: 10),
-                                          Text("${userData['name']}"),
-                                        ],
+                                        );
+                                      },
+                                      child: Container(
+                                        width:
+                                            MediaQuery.of(context).size.width,
+                                        height: 230,
+                                        decoration: BoxDecoration(
+                                            image: DecorationImage(
+                                                fit: BoxFit.cover,
+                                                image: NetworkImage(
+                                                    postData['imageUrl']))),
                                       ),
-                                      FutureBuilder<bool>(
-                                        future: _isFollowingUser(
-                                            postData['userID']),
-                                        builder: (context, followSnapshot) {
-                                          if (!followSnapshot.hasData) {
-                                            return const CircularProgressIndicator(); // Show loading while checking
-                                          }
-
-                                          bool isFollowing =
-                                              followSnapshot.data!;
-
-                                          return TextButton(
-                                            onPressed: () {
-                                              if (isFollowing) {
-                                                unfollow(postData['userID']);
-                                              } else {
-                                                following(postData['userID']);
-                                              }
-                                            },
-                                            child: postData['userID'] !=
-                                                    currentUserID
-                                                ? isFollowing == false
-                                                    ? Text(
-                                                        postData['userID'] !=
-                                                                currentUserID
-                                                            ? isFollowing
-                                                                ? "Following"
-                                                                : "Follow"
-                                                            : "",
-                                                        style: TextStyle(
-                                                          color: isFollowing
-                                                              ? Colors.grey
-                                                              : Colors.blue,
-                                                        ),
-                                                      )
-                                                    : morevertOption(
-                                                        postData['userID'],
-                                                        context,
-                                                        postData,
-                                                        postID)
-                                                : Container(),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  );
-                                }
-                              }),
-                        ),
-                        postData['mediaType'] == 'video'
-                            ? MediaPost(mediaUrl: postData['imageUrl'])
-                            : GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => MyImageView(
-                                          imageUrl: postData['imageUrl']),
                                     ),
-                                  );
-                                },
-                                child: Container(
-                                  width: MediaQuery.of(context).size.width,
-                                  height: 230,
-                                  decoration: BoxDecoration(
-                                      image: DecorationImage(
-                                          fit: BoxFit.cover,
-                                          image: NetworkImage(
-                                              postData['imageUrl']))),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: RichText(
+                                  text: TextSpan(
+                                    children: buildDescriptionWithHashtags(
+                                        postData['description']),
+                                  ),
                                 ),
                               ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: RichText(
-                            text: TextSpan(
-                              children: buildDescriptionWithHashtags(
-                                  postData['description']),
-                            ),
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                                onPressed: () {
-                                  userPostLiked(postID);
-                                },
-                                icon: Icon(
-                                  likedPosts.contains(postID)
-                                      ? Icons.favorite
-                                      : Icons.favorite_outline,
-                                  color: likedPosts.contains(postID)
-                                      ? Colors.red
-                                      : null,
-                                )),
-                            const SizedBox(width: 3),
-                            Text(
-                              '${postLikeCounts[postID] ?? ''}',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    isPostComment = postID;
-                                  });
-                                  if (isPostComment == postID) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            ViewCommentSection(
-                                          postID: postID,
-                                          userData: widget.userData,
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
-                                icon: const Icon(Icons.comment_outlined)),
-                            isReposting != true
-                                ? IconButton(
-                                    onPressed: () {
-                                      repostBtn(
-                                        '${postData['description']}',
-                                        '${postData['imageUrl']}',
-                                        'post',
-                                        '${postData['userID']}',
-                                        '${postData['mediaType']}',
-                                      );
-                                    },
-                                    icon: const Icon(Icons.autorenew_outlined))
-                                : const SizedBox(
-                                    width: 12,
-                                    height: 12,
-                                    child: CircularProgressIndicator()),
-                          ],
-                        ),
-                      ],
+                              Row(
+                                children: [
+                                  IconButton(
+                                      onPressed: () {
+                                        userPostLiked(postID);
+                                      },
+                                      icon: Icon(
+                                        likedPosts.contains(postID)
+                                            ? Icons.favorite
+                                            : Icons.favorite_outline,
+                                        color: likedPosts.contains(postID)
+                                            ? Colors.red
+                                            : null,
+                                      )),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    '${postLikeCounts[postID] ?? ''}',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          isPostComment = postID;
+                                        });
+                                        if (isPostComment == postID) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ViewCommentSection(
+                                                postID: postID,
+                                                userData: widget.userData,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      icon: const Icon(Icons.comment_outlined)),
+                                  isReposting != true
+                                      ? IconButton(
+                                          onPressed: () {
+                                            repostBtn(
+                                              '${postData['description']}',
+                                              '${postData['imageUrl']}',
+                                              'post',
+                                              '${postData['userID']}',
+                                              '${postData['mediaType']}',
+                                            );
+                                          },
+                                          icon: const Icon(
+                                              Icons.autorenew_outlined))
+                                      : const SizedBox(
+                                          width: 12,
+                                          height: 12,
+                                          child: CircularProgressIndicator()),
+                                ],
+                              ),
+                            ],
+                          );
+                        } else {
+                          return Container();
+                        }
+                      },
                     );
-                  } else {
-                    return Container();
-                  }
-                },
-              );
-            },
+                  },
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

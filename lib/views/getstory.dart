@@ -20,7 +20,7 @@ class _GetFollowingStoryState extends State<GetFollowingStory> {
     try {
       // Calculate the timestamp for 24 hours ago
       DateTime now = DateTime.now();
-      DateTime cutoffTime = now.subtract(const Duration(hours: 24));
+      DateTime cutoffTime = now.subtract(const Duration(hours: 4));
 
       QuerySnapshot followingDocs = await FirebaseFirestore.instance
           .collection('follows')
@@ -95,7 +95,7 @@ class _GetFollowingStoryState extends State<GetFollowingStory> {
                       },
                       child: Padding(
                         padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                        child: Column(
+                        child: Stack(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(2.0),
@@ -112,6 +112,37 @@ class _GetFollowingStoryState extends State<GetFollowingStory> {
                                     NetworkImage(story['imageUrl'] ?? ""),
                               ),
                             ),
+                            Positioned(
+                                bottom: 10,
+                                child: FutureBuilder(
+                                    future: FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(story['userID'])
+                                        .get(),
+                                    builder: (context, snapshot) {
+                                      if (!snapshot.hasData) {
+                                        return CircleAvatar(
+                                          maxRadius: 14,
+                                        );
+                                      } else {
+                                        var userprofile = snapshot.data!.data();
+                                        return Container(
+                                          padding: const EdgeInsets.all(2.0),
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: maincolor,
+                                              width: 2,
+                                            ),
+                                          ),
+                                          child: CircleAvatar(
+                                            backgroundImage: NetworkImage(
+                                                '${userprofile!['profileImage']}'),
+                                            maxRadius: 14,
+                                          ),
+                                        );
+                                      }
+                                    }))
                           ],
                         ),
                       ),

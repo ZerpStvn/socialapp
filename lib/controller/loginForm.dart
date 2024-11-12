@@ -9,6 +9,7 @@ import 'package:social/controller/signupForm.dart';
 import 'package:social/utils/globaltheme.dart';
 import 'package:social/utils/logs.dart';
 import 'package:social/views/homepage.dart';
+import 'package:social/views/pap.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -176,7 +177,6 @@ class _LoginFormState extends State<LoginForm> {
                                   if (_formKey.currentState!.validate()) {
                                     _submitform();
                                   }
-                                  recordlogs('', "User login");
                                 },
                                 title: "Login"),
                           ),
@@ -225,10 +225,14 @@ class _LoginFormState extends State<LoginForm> {
 
     try {
       // Attempt to sign in with email and password
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
         email: _emailcont.text,
         password: _passwordcont.text,
-      );
+      )
+          .then((uid) {
+        recordlogs('', "User login");
+      });
 
       User? user = FirebaseAuth.instance.currentUser;
 
@@ -252,9 +256,18 @@ class _LoginFormState extends State<LoginForm> {
               actions: [
                 TextButton(
                   onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const PrivacyPolicyScreen()));
+                  },
+                  child: const Text("Privacy and Policy"),
+                ),
+                TextButton(
+                  onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: const Text("OK"),
+                  child: const Text("Continue"),
                 ),
               ],
             ),

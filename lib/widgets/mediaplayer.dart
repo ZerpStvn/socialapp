@@ -130,7 +130,7 @@ class _MediaPostState extends State<MediaPost> {
                   color: secondColor,
                 ),
                 child: Icon(
-                  _isPlaying ? Icons.play_arrow_outlined : Icons.pause_outlined,
+                  _isPlaying ? Icons.pause_outlined : Icons.play_arrow_outlined,
                   size: 30,
                   color: Colors.white,
                 ),
