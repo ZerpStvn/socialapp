@@ -39,6 +39,8 @@ const maincolor = Color(0xffC96868);
 
 const secondColor = Color(0xff4338CA);
 
+const primarycolor = Color(0xffEBC900);
+
 // Button
 class GlobalButton extends StatelessWidget {
   final Function callback;
@@ -49,7 +51,7 @@ class GlobalButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
         style: ElevatedButton.styleFrom(
-            backgroundColor: secondColor,
+            backgroundColor: primarycolor,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))),
         onPressed: () {

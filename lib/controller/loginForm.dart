@@ -23,6 +23,7 @@ class _LoginFormState extends State<LoginForm> {
   final TextEditingController _passwordcont = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool isload = false;
+  bool isshowpassword = true;
 
   @override
   void dispose() {
@@ -35,6 +36,12 @@ class _LoginFormState extends State<LoginForm> {
   void initState() {
     super.initState();
     _checkSavedCredentials();
+  }
+
+  void viewpassword() {
+    setState(() {
+      isshowpassword = !isshowpassword;
+    });
   }
 
   Future<void> _checkSavedCredentials() async {
@@ -90,13 +97,13 @@ class _LoginFormState extends State<LoginForm> {
                                       fw: FontWeight.bold,
                                       fcolor: Colors.white,
                                     ),
-                                    PrimaryText(
-                                      data:
-                                          "Number 1 Social Media app\nfor student",
-                                      fsize: 14,
-                                      fw: FontWeight.normal,
-                                      fcolor: Colors.white,
-                                    )
+                                    // PrimaryText(
+                                    //   data:
+                                    //       "Number 1 Social Media app\nfor student",
+                                    //   fsize: 14,
+                                    //   fw: FontWeight.normal,
+                                    //   fcolor: Colors.white,
+                                    // )
                                   ],
                                 ),
                               ],
@@ -134,9 +141,14 @@ class _LoginFormState extends State<LoginForm> {
                           const SizedBox(height: 20),
                           TextFormField(
                             controller: _passwordcont,
-                            obscureText: true,
-                            decoration: const InputDecoration(
+                            obscureText: isshowpassword,
+                            decoration: InputDecoration(
                                 labelText: 'Password',
+                                suffixIcon: IconButton(
+                                    onPressed: viewpassword,
+                                    icon: Icon(isshowpassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility)),
                                 labelStyle: TextStyle(color: Colors.black),
                                 focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(color: secondColor),
