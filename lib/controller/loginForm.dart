@@ -23,6 +23,7 @@ class _LoginFormState extends State<LoginForm> {
   final TextEditingController _passwordcont = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool isload = false;
+  bool isviewpassword = true;
 
   @override
   void dispose() {
@@ -35,6 +36,14 @@ class _LoginFormState extends State<LoginForm> {
   void initState() {
     super.initState();
     _checkSavedCredentials();
+  }
+
+  void setisviewpassword() {
+    setState(() {
+      isviewpassword = !isviewpassword;
+
+      debugPrint("$isviewpassword");
+    });
   }
 
   Future<void> _checkSavedCredentials() async {
@@ -134,9 +143,14 @@ class _LoginFormState extends State<LoginForm> {
                           const SizedBox(height: 20),
                           TextFormField(
                             controller: _passwordcont,
-                            obscureText: true,
-                            decoration: const InputDecoration(
+                            obscureText: isviewpassword,
+                            decoration: InputDecoration(
                                 labelText: 'Password',
+                                suffixIcon: IconButton(
+                                    onPressed: setisviewpassword,
+                                    icon: Icon(isviewpassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off)),
                                 labelStyle: TextStyle(color: Colors.black),
                                 focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(color: secondColor),

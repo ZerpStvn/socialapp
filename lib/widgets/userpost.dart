@@ -129,7 +129,7 @@ class _UsersPostFeedState extends State<UsersPostFeed> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const GetFollowingStory(),
+          // const GetFollowingStory(),
           StreamBuilder<List<DocumentSnapshot>>(
             stream: _fetchFollowedUsersPosts(),
             builder: (context, snapshot) {

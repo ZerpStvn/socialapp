@@ -152,6 +152,38 @@ class _CreateUserPostState extends State<CreateUserPost> {
                 },
               ),
               ListTile(
+                leading: const Icon(Icons.camera),
+                title: const Text('Take a Photo'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  XFile? imageData =
+                      await _imagePicker.pickImage(source: ImageSource.camera);
+                  if (imageData != null) {
+                    setState(() {
+                      mediaFile = imageData;
+                      isVideo = false;
+                      _videoController?.dispose();
+                    });
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.video_library),
+                title: const Text('Take a Video'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  XFile? videoData =
+                      await _imagePicker.pickVideo(source: ImageSource.camera);
+                  if (videoData != null) {
+                    setState(() {
+                      mediaFile = videoData;
+                      isVideo = true;
+                      _initializeVideoPlayer(videoData);
+                    });
+                  }
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.video_library),
                 title: const Text('Pick Video'),
                 onTap: () async {
@@ -299,13 +331,13 @@ class _CreateUserPostState extends State<CreateUserPost> {
                                       const SizedBox(
                                         width: 10,
                                       ),
-                                      isVideo == false
-                                          ? GlobalButton(
-                                              callback: () {
-                                                creatpost("story");
-                                              },
-                                              title: "Story")
-                                          : Container()
+                                      // isVideo == false
+                                      //     ? GlobalButton(
+                                      //         callback: () {
+                                      //           creatpost("story");
+                                      //         },
+                                      //         title: "Story")
+                                      //     : Container()
                                     ],
                                   )
                                 : const CircularProgressIndicator()
