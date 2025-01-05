@@ -10,7 +10,9 @@ import 'package:social/widgets/homeapp.dart';
 class ViewCommentSection extends StatefulWidget {
   final Map<String, dynamic>? userData;
   final String postID;
-  const ViewCommentSection({super.key, this.userData, required this.postID});
+  final String ownpost;
+  const ViewCommentSection(
+      {super.key, this.userData, required this.postID, required this.ownpost});
 
   @override
   State<ViewCommentSection> createState() => _ViewCommentSectionState();
@@ -79,6 +81,8 @@ class _ViewCommentSectionState extends State<ViewCommentSection> {
       'comment': usercomment.text,
       'created': Timestamp.now(),
     });
+    upplynotifcation(widget.ownpost, currentUserID, "comment",
+        "User commented your post", postId);
     setState(() {
       usercomment.clear();
     });

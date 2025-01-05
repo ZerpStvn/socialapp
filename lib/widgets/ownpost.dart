@@ -155,6 +155,35 @@ class _OwnUsersPostFeedState extends State<OwnUsersPostFeed> {
     setState(() {});
   }
 
+  Future<void> updateviewcount(String userid, String postid, int count) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('userpost')
+          .doc(userid)
+          .collection("posts")
+          .doc(postid)
+          .update({
+        "views": count,
+      });
+    } catch (error) {
+      debugPrint("$error");
+    }
+  }
+
+  Future<String> checkcommentcount(String postid) async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('comments')
+          .doc(postid)
+          .collection('comments')
+          .get();
+      return "${querySnapshot.docs.length + 1}";
+    } catch (e) {
+      debugPrint('Error checking comment count: $e');
+      return "0";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -209,9 +238,31 @@ class _OwnUsersPostFeedState extends State<OwnUsersPostFeed> {
                           }),
                     ),
                     postData['mediaType'] == 'video'
-                        ? MediaPost(mediaUrl: postData['imageUrl'])
+                        ? MediaPost(
+                            mediaUrl: postData['imageUrl'],
+                            posid: postID,
+                            userid: postData['userID'],
+                            views: postData['views'].toString(),
+                          )
                         : GestureDetector(
                             onTap: () {
+                              int total = 0;
+
+                              if (postData['views'] == null) {
+                                total = 1;
+                                updateviewcount(
+                                    postData['userID'], postID, total);
+                              } else if (postData['views'] != null) {
+                                // Ensure `views` is treated as an int
+                                int currentViews = postData['views'] is int
+                                    ? postData['views']
+                                    : int.parse(postData['views']);
+                                int total = currentViews + 1;
+
+                                updateviewcount(
+                                    postData['userID'], postID, total);
+                              }
+                              debugPrint(postID);
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -222,7 +273,7 @@ class _OwnUsersPostFeedState extends State<OwnUsersPostFeed> {
                             },
                             child: Container(
                               width: MediaQuery.of(context).size.width,
-                              height: 205,
+                              height: 230,
                               decoration: BoxDecoration(
                                   image: DecorationImage(
                                       fit: BoxFit.cover,
@@ -263,26 +314,61 @@ class _OwnUsersPostFeedState extends State<OwnUsersPostFeed> {
                           '${postLikeCounts[postID] ?? ''}',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        IconButton(
-                            onPressed: () {
-                              setState(() {
-                                ispostcomment = postID;
-                              });
-                              if (ispostcomment == postID) {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
+                        Row(
+                          children: [
+                            IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    ispostcomment = postID;
+                                  });
+                                  if (ispostcomment == postID) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
                                         builder: (context) =>
                                             ViewCommentSection(
-                                              postID: postID,
-                                              userData: userData,
-                                            )));
-                              }
-                            },
-                            icon: const Icon(Icons.comment_outlined)),
+                                          ownpost: postData['userID'],
+                                          postID: postID,
+                                          userData: widget.userData,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                icon: const Icon(Icons.comment_outlined)),
+                            FutureBuilder<String>(
+                              future: checkcommentcount(
+                                  postID), // Call your async function
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Text(
+                                      ""); // Show nothing or a placeholder while waiting
+                                } else if (snapshot.hasError) {
+                                  return Text("Error"); // Handle any error
+                                } else if (snapshot.hasData) {
+                                  return Text(snapshot
+                                      .data!); // Display the comment count
+                                } else {
+                                  return Text(
+                                      ""); // Display nothing if the count is 0
+                                }
+                              },
+                            ),
+                          ],
+                        ),
                         IconButton(
                             onPressed: () {},
                             icon: const Icon(Icons.autorenew_outlined)),
+                        postData['views'] != null
+                            ? Row(
+                                children: [
+                                  const Icon(Icons.visibility_outlined),
+                                  const SizedBox(width: 3),
+                                  Text("${postData['views'] ?? 0}")
+                                ],
+                              )
+                            : Container(),
                       ],
                     ),
                   ],
@@ -297,33 +383,33 @@ class _OwnUsersPostFeedState extends State<OwnUsersPostFeed> {
     );
   }
 
-  void showBottomsheetcomment(String postID) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.75, // Initial height
-          minChildSize: 0.5, // Minimum height
-          maxChildSize: 1.0, // Full-screen height
-          builder: (context, scrollController) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-              ),
-              child: ViewCommentSection(
-                postID: postID,
-                userData: widget.userData,
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+  // void showBottomsheetcomment(String postID) {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     backgroundColor: Colors.transparent,
+  //     builder: (context) {
+  //       return DraggableScrollableSheet(
+  //         initialChildSize: 0.75, // Initial height
+  //         minChildSize: 0.5, // Minimum height
+  //         maxChildSize: 1.0, // Full-screen height
+  //         builder: (context, scrollController) {
+  //           return Container(
+  //             decoration: const BoxDecoration(
+  //               color: Colors.white,
+  //               borderRadius: BorderRadius.only(
+  //                 topLeft: Radius.circular(20),
+  //                 topRight: Radius.circular(20),
+  //               ),
+  //             ),
+  //             child: ViewCommentSection(
+  //               postID: postID,
+  //               userData: widget.userData,
+  //             ),
+  //           );
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
 }

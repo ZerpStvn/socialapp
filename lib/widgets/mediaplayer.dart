@@ -1,5 +1,6 @@
 // ignore_for_file: library_private_types_in_public_api
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:social/controller/videoplayer.dart';
 import 'package:social/utils/globaltheme.dart';
@@ -7,8 +8,16 @@ import 'package:video_player/video_player.dart';
 
 class MediaPost extends StatefulWidget {
   final String mediaUrl;
+  final String posid;
+  final String userid;
+  final String views;
 
-  const MediaPost({super.key, required this.mediaUrl});
+  const MediaPost(
+      {super.key,
+      required this.mediaUrl,
+      required this.posid,
+      required this.userid,
+      required this.views});
 
   @override
   _MediaPostState createState() => _MediaPostState();
@@ -69,6 +78,21 @@ class _MediaPostState extends State<MediaPost> {
     super.dispose();
   }
 
+  Future<void> updateviewcount(String userid, String postid, int count) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('userpost')
+          .doc(userid)
+          .collection("posts")
+          .doc(postid)
+          .update({
+        "views": count,
+      });
+    } catch (error) {
+      debugPrint("$error");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -83,10 +107,34 @@ class _MediaPostState extends State<MediaPost> {
       onTap: () {
         if (_isVideo) {
           _playPauseVideo();
+          debugPrint("ds");
+          int total = 0;
+
+          if (widget.views.isEmpty) {
+            total = 1;
+            updateviewcount(widget.userid, widget.posid, total);
+          } else if (widget.views.isNotEmpty) {
+            // Ensure `views` is treated as an int
+            int currentViews = int.parse(widget.views);
+            int total = currentViews + 1;
+            updateviewcount(widget.userid, widget.posid, total);
+          }
         }
       },
       onDoubleTap: () {
         if (_isVideo) {
+          debugPrint("ds");
+          int total = 0;
+
+          if (widget.views.isEmpty) {
+            total = 1;
+            updateviewcount(widget.userid, widget.posid, total);
+          } else if (widget.views.isNotEmpty) {
+            // Ensure `views` is treated as an int
+            int currentViews = int.parse(widget.views);
+            int total = currentViews + 1;
+            updateviewcount(widget.userid, widget.posid, total);
+          }
           Navigator.push(
             context,
             MaterialPageRoute(

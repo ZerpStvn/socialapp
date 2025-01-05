@@ -111,14 +111,8 @@ class _UserProfileState extends State<UserProfile> {
           'userID': currentUserID.currentUser!.uid
         });
 
-        await FirebaseFirestore.instance
-            .collection('notification')
-            .doc(widget.userID)
-            .collection('notif')
-            .add({
-          'timestamp': FieldValue.serverTimestamp(),
-          'userID': currentUserID.currentUser!.uid
-        });
+        upplynotifcation(
+            widget.userID, widget.userID, "follow", "User Followed you", "");
         _checkFollowStatus();
       }
       _getFollowerCount();

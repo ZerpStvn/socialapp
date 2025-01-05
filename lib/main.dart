@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:social/controller/loginForm.dart';
+import 'package:social/controller/pushnotif.dart';
 import 'package:social/firebase_options.dart';
 
 void main() async {
@@ -10,6 +11,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  NotificationService().initNotification();
   runApp(const MyApp());
 }
 

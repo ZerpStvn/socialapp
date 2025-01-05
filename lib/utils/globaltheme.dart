@@ -1,6 +1,8 @@
 //
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 // Primary Text
 class PrimaryText extends StatelessWidget {
@@ -61,5 +63,46 @@ class GlobalButton extends StatelessWidget {
           data: title,
           fcolor: Colors.white,
         ));
+  }
+}
+
+Future<void> upplynotifcation(String useownid, String ownnotif, String type,
+    String title, String? postid) async {
+  try {
+    await FirebaseFirestore.instance
+        .collection('notif')
+        .doc(useownid)
+        .collection('datanot')
+        .add({
+      "userownid": useownid,
+      'whonotif': ownnotif,
+      'type': type,
+      'created': Timestamp.now(),
+      'title': title,
+      'postid': postid ?? "",
+    });
+  } catch (error) {
+    debugPrint("$error");
+  }
+}
+
+String formatTimestamp1(DateTime? timestamp) {
+  if (timestamp == null) return 'Unknown'; // Handle null timestamp
+
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final sentDate = DateTime(timestamp.year, timestamp.month, timestamp.day);
+
+  if (sentDate == today) {
+    // Sent today
+    return DateFormat('h:mm a').format(timestamp); // Format as 3:00 AM
+  } else if (now.difference(timestamp).inHours < 24) {
+    // Sent within the last 24 hours
+    return DateFormat('MMM. d h:mm a')
+        .format(timestamp); // Format as Apr. 20 3:00 AM
+  } else {
+    // Sent more than 24 hours ago
+    return DateFormat('MMM. d, yyyy h:mm a')
+        .format(timestamp); // Format as Apr. 20, 2023 3:00 AM
   }
 }

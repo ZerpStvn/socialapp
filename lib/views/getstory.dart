@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:social/utils/globaltheme.dart';
-import 'package:social/views/photoview.dart';
 import 'package:social/views/storyview.dart';
 
 class GetFollowingStory extends StatefulWidget {

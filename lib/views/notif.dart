@@ -18,14 +18,16 @@ class _ShowNotificationState extends State<ShowNotification> {
   Future<void> _displayNotif() async {
     try {
       QuerySnapshot userDocs = await FirebaseFirestore.instance
-          .collection('notification')
-          .doc(user!.uid)
           .collection('notif')
+          .doc(user!.uid)
+          .collection('datanot')
           .get();
       debugPrint("User notifications found: ${userDocs.docs.length}");
 
       for (var doc in userDocs.docs) {
-        String userID = doc['userID'];
+        String userID = doc['whonotif'];
+        String type = doc['type'];
+        String title = doc['title'] ?? "No title available"; // Default value
         debugPrint("User notifications found for: $userID");
 
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
@@ -37,6 +39,7 @@ class _ShowNotificationState extends State<ShowNotification> {
           Map<String, dynamic>? userData =
               userDoc.data() as Map<String, dynamic>?;
           userData!['id'] = userID; // Add userID to the user data
+          userData['title'] = title; // Add the notification title to user data
           usersNotifData.add(userData);
           debugPrint("User data added: $userData");
         } else {
@@ -69,26 +72,29 @@ class _ShowNotificationState extends State<ShowNotification> {
               itemBuilder: (context, index) {
                 final notification =
                     usersNotifData[index]; // Get notification data
-
-                return ListTile(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            UserProfile(userID: notification['id']),
-                      ),
-                    );
-                  },
-                  leading: CircleAvatar(
-                    foregroundColor: secondColor,
-                    foregroundImage:
-                        NetworkImage(notification['profileImage'] ?? ''),
-                  ),
-                  title: PrimaryText(data: notification['name'] ?? "Unknown"),
-                  subtitle: const PrimaryText(data: "following you"),
-                  trailing: const Icon(Icons.arrow_right_outlined),
-                );
+                if (notification['type'] != 'chat') {
+                  return ListTile(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              UserProfile(userID: notification['id']),
+                        ),
+                      );
+                    },
+                    leading: CircleAvatar(
+                      foregroundColor: secondColor,
+                      foregroundImage:
+                          NetworkImage(notification['profileImage'] ?? ''),
+                    ),
+                    title: Text("${notification['name']}"),
+                    subtitle: Text("${notification['title']}"),
+                    trailing: const Icon(Icons.arrow_right_outlined),
+                  );
+                } else {
+                  return Container();
+                }
               },
             ),
     );

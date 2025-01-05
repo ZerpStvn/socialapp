@@ -289,6 +289,33 @@ class _SignUpFormState extends State<SignUpForm> {
     });
 
     try {
+      // Query Firestore to check if a document with matching schoolId exists
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('enrolled')
+          .where('schoolid', isEqualTo: _schoolIdController.text)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        // If no matching documents found, show a dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Not Enrolled"),
+            content: const Text(
+                "You are not enrolled in a university. You must be a student of the said university to continue."),
+            actions: [
+              TextButton(
+                child: const Text("OK"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+        return; // Stop further execution if the schoolId is not found
+      }
+
       if (imagepic != null) {
         UserCredential userCredential = await FirebaseAuth.instance
             .createUserWithEmailAndPassword(

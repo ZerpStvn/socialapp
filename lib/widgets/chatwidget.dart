@@ -1,16 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:social/utils/globaltheme.dart';
 
 class Message {
   final String senderId;
   final String message;
+  final Timestamp? timestamp;
   final bool isSending;
 
   Message({
     required this.senderId,
     required this.message,
+    this.timestamp,
     this.isSending = false,
   });
 }
@@ -80,6 +83,7 @@ class _ChatWidgetState extends State<ChatWidget> {
         return Message(
           senderId: doc["sender"],
           message: doc["message"],
+          timestamp: doc['time'],
           isSending: false,
         );
       }).toList();
@@ -122,13 +126,16 @@ class _ChatWidgetState extends State<ChatWidget> {
         "sender": message.senderId,
         "receiver": widget.recieverID,
         "message": message.message,
+        "isRead": false,
         "time": Timestamp.now(),
       });
-
+      upplynotifcation(widget.recieverID, user!.uid, 'chat',
+          "Sent you a message", chatDocId);
       setState(() {
         _messages[_messages.length - 1] = Message(
           senderId: message.senderId,
           message: message.message,
+          timestamp: Timestamp.now(),
           isSending: false,
         );
       });
@@ -141,6 +148,27 @@ class _ChatWidgetState extends State<ChatWidget> {
   void dispose() {
     super.dispose();
     _messageController.dispose();
+  }
+
+  String formatTimestamp(DateTime? timestamp) {
+    if (timestamp == null) return 'Unknown'; // Handle null timestamp
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final sentDate = DateTime(timestamp.year, timestamp.month, timestamp.day);
+
+    if (sentDate == today) {
+      // Sent today
+      return DateFormat('h:mm a').format(timestamp); // Format as 3:00 AM
+    } else if (now.difference(timestamp).inHours < 24) {
+      // Sent within the last 24 hours
+      return DateFormat('MMM. d h:mm a')
+          .format(timestamp); // Format as Apr. 20 3:00 AM
+    } else {
+      // Sent more than 24 hours ago
+      return DateFormat('MMM. d, yyyy h:mm a')
+          .format(timestamp); // Format as Apr. 20, 2023 3:00 AM
+    }
   }
 
   @override
@@ -175,6 +203,11 @@ class _ChatWidgetState extends State<ChatWidget> {
                         Text(
                           message.message,
                           style: const TextStyle(fontSize: 16),
+                        ),
+                        Text(
+                          "${formatTimestamp(message.timestamp!.toDate())}",
+                          style: const TextStyle(
+                              fontSize: 10, color: Colors.white),
                         ),
                         // Show a loading indicator if the message is sending
                         if (message.isSending)
