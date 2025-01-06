@@ -69,6 +69,10 @@ For any questions, concerns, or requests regarding this policy, please contact P
 
 Thank you for being part of the Profluence community!
 
+
+
+Version 1.1 by Comp19 aka ProFluence group.
+
                   ''',
                   style: TextStyle(fontSize: 16),
                 ),
